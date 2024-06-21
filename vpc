@@ -1,0 +1,205 @@
+resource "aws_vpc" "ruqi-vpc" {
+  cidr_block       = "10.0.0.0/16"
+  instance_tenancy = "default"
+
+  tags = {
+    Name = "ruqi-vpc"
+  }
+}
+
+# public-subnet
+resource "aws_subnet" "ruqi-web-sub" {
+  vpc_id     = aws_vpc.ruqi-vpc.id
+  cidr_block = "10.0.1.0/24"
+
+  tags = {
+    Name = "ruqi-web-sub"
+  }
+}
+
+# api subnet
+resource "aws_subnet" "ruqi-api-sub" {
+  vpc_id     = aws_vpc.ruqi-vpc.id
+  cidr_block = "10.0.2.0/24"
+
+  tags = {
+    Name = "ruqi-api-sub"
+  }
+}
+
+# database subnet
+resource "aws_subnet" "ruqi-db-sub" {
+  vpc_id     = aws_vpc.ruqi-vpc.id
+  cidr_block = "10.0.3.0/24"
+
+  tags = {
+    Name = "ruqi-db-sub"
+  }
+}
+
+# internet gw
+resource "aws_internet_gateway" "ruqi-gw" {
+  vpc_id = aws_vpc.ruqi-vpc.id
+
+  tags = {
+    Name = "ruqi-gw"
+  }
+}
+
+# route tabele
+resource "aws_route_table" "ruqi-web-rt" {
+  vpc_id = aws_vpc.ruqi-vpc.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.ruqi-gw.id
+  }
+
+ tags = {
+    Name = "ruqi-web-rt"
+  }
+}
+
+# api rt
+resource "aws_route_table" "ruqi-api-rt" {
+  vpc_id = aws_vpc.ruqi-vpc.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.ruqi-gw.id
+  }
+
+ tags = {
+    Name = "ruqi-api-rt"
+  }
+}
+
+
+# database rt
+resource "aws_route_table" "ruqi-db-rt" {
+  vpc_id = aws_vpc.ruqi-vpc.id
+
+
+ tags = {
+    Name = "ruqi-db-rt"
+  }
+}
+
+# web subnet association
+resource "aws_route_table_association" "ruqi-pub-asc" {
+  subnet_id      = aws_subnet.ruqi-web-sub.id
+  route_table_id = aws_route_table.ruqi-web-rt.id
+}
+
+#api subnet association
+resource "aws_route_table_association" "ruqi-api-asc" {
+  subnet_id      = aws_subnet.ruqi-api-sub.id
+  route_table_id = aws_route_table.ruqi-api-rt.id
+}
+
+# db subnet association
+resource "aws_route_table_association" "ruqi-db-asc" {
+  subnet_id      = aws_subnet.ruqi-db-sub.id
+  route_table_id = aws_route_table.ruqi-db-rt.id
+}
+
+# web nacl
+resource "aws_network_acl" "ruqi-web-nacl" {
+  vpc_id = aws_vpc.ruqi-vpc.id
+
+  egress {
+    protocol   = "tcp"
+    rule_no    = 100
+    action     = "allow"
+    cidr_block = "0.0.0.0/0"
+    from_port  = 0
+    to_port    = 65535
+  }
+
+  ingress {
+    protocol   = "tcp"
+    rule_no    = 100
+    action     = "allow"
+    cidr_block = "0.0.0.0/0"
+    from_port  = 0
+    to_port    = 65535
+  }
+
+  tags = {
+    Name = "ruqi-web-nacl"
+  }
+}
+
+# api nacl
+
+resource "aws_network_acl" "ruqi-api-nacl" {
+  vpc_id = aws_vpc.ruqi-vpc.id
+
+  egress {
+    protocol   = "tcp"
+    rule_no    = 100
+    action     = "allow"
+    cidr_block = "0.0.0.0/0"
+    from_port  = 0
+    to_port    = 65535
+  }
+
+  ingress {
+    protocol   = "tcp"
+    rule_no    = 100
+    action     = "allow"
+    cidr_block = "0.0.0.0/0"
+    from_port  = 0
+    to_port    = 65535
+  }
+
+  tags = {
+    Name = "ruqi-api-nacl"
+  }
+}
+
+# database nacl
+resource "aws_network_acl" "ruqi-db-nacl" {
+  vpc_id = aws_vpc.ruqi-vpc.id
+
+  egress {
+    protocol   = "tcp"
+    rule_no    = 100
+    action     = "allow"
+    cidr_block = "0.0.0.0/0"
+    from_port  = 0
+    to_port    = 65535
+  }
+
+  ingress {
+    protocol   = "tcp"
+    rule_no    = 100
+    action     = "allow"
+    cidr_block = "0.0.0.0/0"
+    from_port  = 0
+    to_port    = 65535
+  }
+
+  tags = {
+    Name = "ruqi-db-nacl"
+  }
+}
+
+# nacl web-sub-association
+resource "aws_network_acl_association" "ruqi-web-nacl-asc" {
+  network_acl_id = aws_network_acl.ruqi-web-nacl.id
+  subnet_id      = aws_subnet.ruqi-web-sub.id
+}
+
+# nacl api-sub-association
+resource "aws_network_acl_association" "ruqi-api-nacl-asc" {
+  network_acl_id = aws_network_acl.ruqi-api-nacl.id
+  subnet_id      = aws_subnet.ruqi-api-sub.id
+}
+
+# nacl db-sub-association
+resource "aws_network_acl_association" "ruqi-db-nacl-asc" {
+  network_acl_id = aws_network_acl.ruqi-db-nacl.id
+  subnet_id      = aws_subnet.ruqi-db-sub.id
+}
+
